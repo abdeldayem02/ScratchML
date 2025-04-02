@@ -10,6 +10,7 @@ ScratchML is a Python library for implementing machine learning and deep learnin
 - Linear Regression (With Gradient Descent & Normal Equation)
 - Ridge Regression (L2 Regularization)
 - Lasso Regression (L1 Regularization)
+- Polynomial Regression
 
 #### Classification (Predicting Discrete Labels)
 - Logistic Regression (Binary & Multi-class Classification)
