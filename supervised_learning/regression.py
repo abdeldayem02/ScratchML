@@ -4,8 +4,8 @@ from itertools import combinations_with_replacement
 class Regression(object):
     """
     -----------------------------
-    Bass Class for the regression models. Models where the relationship between
-    y(target variable) and X(input features) where  y = Xθ + ϵ
+    Base Class for the regression models. Models where the relationship between
+    y(target variable) and X(input features) is defined as y = Xθ + ϵ
     -----------------------------
     """
     def __init__(self):
@@ -17,7 +17,7 @@ class Regression(object):
 
     def _add_bias_term(self, X):
         """
-        Regression models often require a bias term (intercept)
+        Regression models often require a bias term (intercept).
         This function ensures the input data matrix X always has a column of ones.
         """
         X = np.array(X)
@@ -32,20 +32,22 @@ class Regression(object):
     
     def fit(self, X, y):
         """
-        Each model will has its own fitting version,
+        Each model will have its own fitting version,
         so this function (the same for predict() function) is a placeholder (empty).
         """
         raise NotImplementedError("Subclasses must implement the fit method.")
         
     
     def predict(self, X):
-        
-        raise NotImplementedError("Subclasses must implement the fit method.")
+        """
+        Placeholder for the predict method. Each subclass must implement its own version.
+        """
+        raise NotImplementedError("Subclasses must implement the predict method.")
         
 
     def evaluate(self, X, y, metric = "mse"):
         """
-        A generic method for evaluating model performance with multiple mertics like:
+        A generic method for evaluating model performance with multiple metrics like:
         
         - Mean Squared Error (MSE) which is the default
         - Mean Absolute Error (MAE)
@@ -69,27 +71,29 @@ class Regression(object):
 
 class LinearRegression(Regression):
     """
-    I used 2 methods for the Linear Regression:
+    Linear Regression Model:
     ----------------------------------------------------------------------------
-    1- **Normal Equation**: provides a closed-form solution to Linear Regresssion, meaning it calcuates
-    the optimal weights (θ) directly without needing iteration (as in Gradient Descent).
-    The Formula for the Normal Equation is: θ = inv((X.T * X)) * X.T * y 
-    where inv means the inverse and T means is the transpose
+    1- **Normal Equation**: Provides a closed-form solution to Linear Regression,
+    calculating the optimal weights (θ) directly without iteration.
+    Formula: θ = inv((X.T * X)) * X.T * y 
     
-    2- **Gradient Descent**: is an optimization algorithm used to find the optimal parameters (weights)
-    for a machine learning model by minimizing a cost function, and here in Linear Regression,
-    we use it to minimize the Mean Squared Error (MSE) between predicted and actual values.
-
+    2- **Gradient Descent**: An optimization algorithm used to find the optimal
+    parameters (weights) by minimizing the Mean Squared Error (MSE).
     """
     def __init__(self):
         super().__init__()
 
     def fit(self, X, y, method = "normal", learning_rate=0.001, epochs=1000):
+        """
+        Fits the Linear Regression model using the specified method:
+        - 'normal': Uses the Normal Equation.
+        - 'gd': Uses Gradient Descent.
+        """
         X = self._add_bias_term(X)
         y = np.array(y)
         if method == "normal":
-            self.theta = np.linalg.inv(X.T @ X) @ X.T @ y
-            
+            self.theta = np.linalg.pinv(X.T @ X) @ X.T @ y
+
         elif method == "gd":
             self.theta = np.zeros(X.shape[1])
             for _ in range(epochs):
@@ -100,27 +104,47 @@ class LinearRegression(Regression):
             raise ValueError("Invalid method. Use 'normal' or 'gd'. ")
     
     def predict(self, X):
+        """
+        Predicts the target variable for the given input data X.
+        """
         X = self._add_bias_term(X)
         y_pred = np.dot(X,self.theta)
         return y_pred
     
     def evaluate(self, X, y, metric="mse"):
+        """
+        Evaluates the model performance using the specified metric.
+        """
         return super().evaluate(X, y, metric)
     
             
 
 class RidgeRegression(Regression):
+    """
+    Ridge Regression Model:
+    ----------------------------------------------------------------------------
+    Ridge Regression adds L2 regularization to the cost function to prevent
+    overfitting by penalizing large weights.
+    """
     def __init__(self, lambda_=1.0):
+        """
+        lambda_: Regularization strength. Higher values mean stronger regularization.
+        """
         super().__init__()
         self.lambda_ = lambda_
 
     def fit(self, X, y, method="normal", learning_rate=0.001, epochs=1000):
+        """
+        Fits the Ridge Regression model using the specified method:
+        - 'normal': Uses the Normal Equation with L2 regularization.
+        - 'gd': Uses Gradient Descent with L2 regularization.
+        """
         X = self._add_bias_term(X)
 
         if method == "normal":
             I = np.eye(X.shape[1])  # Identity matrix
             I[0, 0] = 0  # Don't penalize the bias term
-            self.theta = np.linalg.inv(X.T @ X + self.lambda_ * I) @ X.T @ y
+            self.theta = np.linalg.pinv(X.T @ X + self.lambda_ * I) @ X.T @ y
 
         elif method == "gd":
             self.theta = np.zeros(X.shape[1])
@@ -132,16 +156,30 @@ class RidgeRegression(Regression):
             raise ValueError("Invalid method. Use 'normal' or 'gd'.")
 
     def predict(self, X):
+        """
+        Predicts the target variable for the given input data X.
+        """
         X = self._add_bias_term(X)
         return np.dot(X, self.theta)
 
 class LassoRegression(Regression):
-    
+    """
+    Lasso Regression Model:
+    ----------------------------------------------------------------------------
+    Lasso Regression adds L1 regularization to the cost function to encourage
+    sparsity in the model by driving some weights to zero.
+    """
     def __init__(self, lambda_=1.0):
+        """
+        lambda_: Regularization strength. Higher values mean stronger regularization.
+        """
         super().__init__()
         self.lambda_ = lambda_
 
-    def fit(self, X, y, learning_rate = 0.001,epochs = 1000):
+    def fit(self, X, y, learning_rate = 0.001, epochs = 1000):
+        """
+        Fits the Lasso Regression model using Gradient Descent with L1 regularization.
+        """
         X = self._add_bias_term(X)
         self.theta = np.zeros(X.shape[1])
         for _ in range(epochs):
@@ -151,16 +189,30 @@ class LassoRegression(Regression):
             self.theta -= learning_rate * gradient
 
     def predict(self, X):
+        """
+        Predicts the target variable for the given input data X.
+        """
         X = self._add_bias_term(X)
         return X @ self.theta
 
 class PolynomialRegression(Regression):  
-
+    """
+    Polynomial Regression Model:
+    ----------------------------------------------------------------------------
+    Extends Linear Regression by transforming the input features into polynomial
+    features of a specified degree.
+    """
     def __init__(self, degree = 2):
+        """
+        degree: The degree of the polynomial features to generate.
+        """
         super().__init__()
         self.degree = degree
 
     def _transform_features(self, X):
+        """
+        Transforms the input features into polynomial features up to the specified degree.
+        """
         n_samples, n_features = X.shape
 
         X_transformed = []
@@ -173,27 +225,32 @@ class PolynomialRegression(Regression):
                 term = np.prod(X[:, combination], axis=1).reshape(-1,1)
                 X_transformed.append(term)
 
-            
         return np.hstack(X_transformed)
     
     def fit(self, X, y, method = "normal", learning_rate = 0.001, epochs = 1000):
+        """
+        Fits the Polynomial Regression model using the specified method:
+        - 'normal': Uses the Normal Equation.
+        - 'gd': Uses Gradient Descent.
+        """
         X_poly = self._transform_features(X)
         X_poly = self._add_bias_term(X_poly)
 
         if method == "normal":
-            self.theta = np.linalg.inv(X_poly.T @ X_poly) @ X_poly.T @ y
+            self.theta = np.linalg.pinv(X_poly.T @ X_poly) @ X_poly.T @ y
+
         elif method == "gd":
             self.theta = np.zeros(X_poly.shape[1])
             for _ in range(epochs):
                 gradient = (1 / X_poly.shape[0]) * (X_poly.T @ (X_poly @ self.theta - y))
                 self.theta -= learning_rate * gradient
 
-    
     def predict(self, X):
-        
+        """
+        Predicts the target variable for the given input data X.
+        """
         X_poly = self._transform_features(X)
         X_poly = self._add_bias_term(X_poly)
         predictions = X_poly @ self.theta
         return predictions
 
-        
