@@ -16,23 +16,20 @@ class KNN():
             raise ValueError("Unsupported distance metric. Choose 'euclidean' or 'manhattan'.")
         self.distance_metric = distance_metric
 
-    def _compute_distance(self, X1, X2):
+    def _compute_distances(self, X_test):
         """
-        Compute the distance between two points based on the selected distance metric.
+        Compute distances between test points and all training points in a vectorized manner.
         
         Parameters:
-        - X1: First data point
-        - X2: Second data point
+        - X_test: Test feature data
         
         Returns:
-        - Distance between X1 and X2
+        - Matrix of distances (shape: [n_test_samples, n_train_samples])
         """
         if self.distance_metric == "euclidean":
-            # Euclidean distance formula
-            return np.sqrt(np.sum((X1 - X2) ** 2))
+            return np.sqrt(np.sum((X_test[:, np.newaxis, :] - self.X_train) ** 2, axis=2))
         elif self.distance_metric == "manhattan":
-            # Manhattan distance formula
-            return np.sum(np.abs(X1 - X2))
+            return np.sum(np.abs(X_test[:, np.newaxis, :] - self.X_train), axis=2)
         else:
             raise ValueError("Unsupported distance metric. Choose 'euclidean' or 'manhattan'.")
 
@@ -49,27 +46,18 @@ class KNN():
         self.X_train = np.array(X_train)
         self.y_train = np.array(y_train)
 
-    def _get_neighbors(self, X_test, X_train, y_train):
+    def _get_neighbors(self, distances):
         """
-        Find the k nearest neighbors for a given test point.
+        Find the k nearest neighbors for all test points.
         
         Parameters:
-        - X_test: Test data point
-        - X_train: Training feature data
-        - y_train: Training labels
+        - distances: Matrix of distances (shape: [n_test_samples, n_train_samples])
         
         Returns:
-        - Labels of the k nearest neighbors
+        - Array of k nearest neighbor labels for each test point
         """
-        # Compute distances from the test point to all training points
-        distances = [self._compute_distance(X_test, x_train) for x_train in X_train]
-        
-        # Get indices of the k smallest distances
-        k_indices = np.argsort(distances)[:self.k]
-        
-        # Retrieve the labels of the k nearest neighbors
-        neighbors = y_train[k_indices]
-        return neighbors
+        k_indices = np.argsort(distances, axis=1)[:, :self.k]
+        return self.y_train[k_indices]
 
     def predict(self, X_test):
         """
@@ -82,20 +70,39 @@ class KNN():
         - Predicted labels for the test data
         """
         X_test = np.array(X_test)
-        predictions = []
+        distances = self._compute_distances(X_test)
+        neighbors = self._get_neighbors(distances)
         
-        for x in X_test:
-            # Get the k nearest neighbors for the current test point
-            neighbors = self._get_neighbors(x, self.X_train, self.y_train)
-            
-            # Perform majority voting to determine the predicted label
-            unique, counts = np.unique(neighbors, return_counts=True)
+        predictions = []
+        for neighbor_labels in neighbors:
+            unique, counts = np.unique(neighbor_labels, return_counts=True)
             max_count = np.max(counts)
-            # Handle ties by selecting the smallest label in case of a tie
             prediction = unique[counts == max_count].min()
             predictions.append(prediction)
         
         return np.array(predictions)
+
+    def predict_proba(self, X_test):
+        """
+        Predict the probability estimates for the given test data.
+        
+        Parameters:
+        - X_test: Test feature data
+        
+        Returns:
+        - Probability estimates for each class (shape: [n_test_samples, n_classes])
+        """
+        X_test = np.array(X_test)
+        distances = self._compute_distances(X_test)
+        neighbors = self._get_neighbors(distances)
+        
+        classes = np.unique(self.y_train)
+        probabilities = []
+        for neighbor_labels in neighbors:
+            counts = np.array([np.sum(neighbor_labels == c) for c in classes])
+            probabilities.append(counts / self.k)
+        
+        return np.array(probabilities)
 
     def evaluate(self, X_test, y_test):
         """
