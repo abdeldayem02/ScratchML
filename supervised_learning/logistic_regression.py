@@ -17,7 +17,7 @@ class LogisticRegression():
         - lambda_ (float): Regularization strength. Default is 0 (no regularization).
         - regularization (str): Type of regularization ('l1', 'l2', or None). Default is None.
         """
-        self.theta = None
+        self.theta = np.array([])
         self.regularization = regularization
         self.lambda_ = lambda_
 
