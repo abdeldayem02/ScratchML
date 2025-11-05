@@ -95,6 +95,8 @@ class LogisticRegression():
         Returns:
         - (array-like): Predicted probabilities for each sample.
         """
+        if len(self.theta) == 0:
+            raise ValueError("Model is not trained yet. Call 'fit' before 'predict_proba'.")
         X = self._add_bias_term(X)
         return self._sigmoid(X @ self.theta)
 
@@ -109,7 +111,22 @@ class LogisticRegression():
         Returns:
         - (array-like): Predicted class labels (0 or 1).
         """
-        X = self._add_bias_term(X)
         proba = self.predict_proba(X)
         return (proba >= threshold).astype(int)
+
+    def evaluate(self, X, y):
+        """
+        Evaluate the accuracy of the model on the test data.
+
+        Parameters:
+        - X (array-like): Test feature data
+        - y (array-like): True labels for the test data
+
+        Returns:
+        - float: Accuracy of the model (proportion of correct predictions)
+        """
+        y_pred = self.predict(X)
+        accuracy = np.mean(y_pred == y)
+        print(f"Accuracy: {accuracy:.4f}")
+        return accuracy
 

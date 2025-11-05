@@ -8,6 +8,9 @@ class Regression(object):
     y(target variable) and X(input features) is defined as y = Xθ + ϵ
     -----------------------------
     """
+    DEFAULT_LEARNING_RATE = 0.001
+    DEFAULT_EPOCHS = 1000
+
     def __init__(self):
         """
         Initializes the base Regression model.
@@ -90,7 +93,7 @@ class Regression(object):
         Returns:
             numpy.ndarray: Predicted target values.
         """
-        if self.theta is None:
+        if len(self.theta) == 0:
             raise ValueError("Model is not trained yet. Call 'fit' before 'predict'.")
         
         X = self._add_bias_term(X)
@@ -104,18 +107,20 @@ class Regression(object):
         - Mean Absolute Error (MAE)
         - R² Score
         """
-        X = self._add_bias_term(X)
         y_pred = self.predict(X)
 
         if metric == "mse":
             mse = np.mean((y - y_pred) ** 2)
             print(f"MSE: {mse}")
+            return mse
         elif metric == "mae":
             mae = np.mean(np.abs(y - y_pred))
             print(f"MAE: {mae}")
+            return mae
         elif metric == "r2":
             r2 = 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2))
             print(f"R2: {r2}")
+            return r2
         else:
             raise ValueError("Unsupported metric. Use 'mse', 'mae', or 'r2'.")
 
@@ -132,7 +137,7 @@ class LinearRegression(Regression):
     parameters (weights) by minimizing the Mean Squared Error (MSE).
     """
 
-    def fit(self, X, y, method="normal", learning_rate=0.001, epochs=1000):
+    def fit(self, X, y, method="normal", learning_rate=Regression.DEFAULT_LEARNING_RATE, epochs=Regression.DEFAULT_EPOCHS):
         """
         Fits the Linear Regression model using the specified method:
         - 'normal': Uses the Normal Equation.
@@ -151,7 +156,6 @@ class LinearRegression(Regression):
             raise ValueError("Invalid method. Use 'normal' or 'gd'.")
 
 
-
 class RidgeRegression(Regression):
     """
     Ridge Regression Model:
@@ -159,13 +163,16 @@ class RidgeRegression(Regression):
     Ridge Regression adds L2 regularization to the cost function to prevent
     overfitting by penalizing large weights.
     """
-    def __init__(self, lambda_=1.0):
+    DEFAULT_LAMBDA = 1.0
+
+    def __init__(self, lambda_=DEFAULT_LAMBDA):
         """
         lambda_: Regularization strength. Higher values mean stronger regularization.
         """
+        super().__init__()
         self.lambda_ = lambda_
 
-    def fit(self, X, y, method="normal", learning_rate=0.001, epochs=1000):
+    def fit(self, X, y, method="normal", learning_rate=Regression.DEFAULT_LEARNING_RATE, epochs=Regression.DEFAULT_EPOCHS):
         """
         Fits the Ridge Regression model using the specified method:
         - 'normal': Uses the Normal Equation with L2 regularization.
@@ -183,7 +190,6 @@ class RidgeRegression(Regression):
             raise ValueError("Invalid method. Use 'normal' or 'gd'.")
 
 
-
 class LassoRegression(Regression):
     """
     Lasso Regression Model:
@@ -191,19 +197,21 @@ class LassoRegression(Regression):
     Lasso Regression adds L1 regularization to the cost function to encourage
     sparsity in the model by driving some weights to zero.
     """
-    def __init__(self, lambda_=1.0):
+    DEFAULT_LAMBDA = 1.0
+
+    def __init__(self, lambda_=DEFAULT_LAMBDA):
         """
         lambda_: Regularization strength. Higher values mean stronger regularization.
         """
+        super().__init__()
         self.lambda_ = lambda_
 
-    def fit(self, X, y, learning_rate = 0.001, epochs = 1000):
+    def fit(self, X, y, learning_rate=Regression.DEFAULT_LEARNING_RATE, epochs=Regression.DEFAULT_EPOCHS):
         """
         Fits the Lasso Regression model using Gradient Descent with L1 regularization.
         """
         X = self._add_bias_term(X)
         self._gradient_descent(X, y, learning_rate, epochs, regularization=self.lambda_, l1=True)
-
 
 
 class PolynomialRegression(Regression):  
@@ -217,6 +225,7 @@ class PolynomialRegression(Regression):
         """
         degree: The degree of the polynomial features to generate.
         """
+        super().__init__()
         self.degree = degree
 
     def _transform_features(self, X):
@@ -237,7 +246,7 @@ class PolynomialRegression(Regression):
 
         return np.hstack(X_transformed)
     
-    def fit(self, X, y, method="normal", learning_rate=0.001, epochs=1000):
+    def fit(self, X, y, method="normal", learning_rate=Regression.DEFAULT_LEARNING_RATE, epochs=Regression.DEFAULT_EPOCHS):
         """
         Fits the Polynomial Regression model using the specified method:
         - 'normal': Uses the Normal Equation.

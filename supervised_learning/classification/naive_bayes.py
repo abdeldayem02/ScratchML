@@ -123,6 +123,7 @@ class NaiveBayes():
         """
         y_pred = self.predict(X)  # Predict class labels for the test data
         accuracy = np.sum(y_pred == y) / len(y)  # Calculate accuracy
+        print(f"Accuracy: {accuracy:.4f}")  # Add this line
         return accuracy
 
 

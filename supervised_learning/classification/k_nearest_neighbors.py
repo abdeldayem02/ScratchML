@@ -69,6 +69,8 @@ class KNN():
         Returns:
         - Predicted labels for the test data
         """
+        if not hasattr(self, 'X_train') or not hasattr(self, 'y_train'):
+            raise ValueError("Model has not been fitted yet. Call fit() before predict().")
         X_test = np.array(X_test)
         distances = self._compute_distances(X_test)
         neighbors = self._get_neighbors(distances)
@@ -121,4 +123,5 @@ class KNN():
         
         # Calculate accuracy as the proportion of correct predictions
         accuracy = np.sum(y_pred == y_test) / len(y_test)
+        print(f"Accuracy: {accuracy:.4f}")  # Add this
         return accuracy
